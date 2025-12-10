@@ -98,35 +98,35 @@ export default function BulkUploadChildren({ onUploadSuccess }: Props) {
   };
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
-      <div className="flex items-start gap-4">
-        <div className="p-3 bg-blue-500 rounded-lg">
-          <FaFileExcel className="text-white" size={24} />
+    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 sm:p-6 border-2 border-blue-200">
+      <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+        <div className="p-2 sm:p-3 bg-blue-500 rounded-lg flex-shrink-0">
+          <FaFileExcel className="text-white" size={20} />
         </div>
-        <div className="flex-1">
-          <h3 className="text-lg font-bold text-gray-800 mb-2">
+        <div className="flex-1 min-w-0 w-full">
+          <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2">
             Carga Masiva de Niños
           </h3>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
             Sube un archivo Excel o CSV con los datos de múltiples niños. El
             formato debe incluir las columnas: <strong>fullName</strong>,{" "}
             <strong>age</strong>, <strong>sex</strong> (Niño/Niña).
           </p>
 
           {/* Botones de acción */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             {/* Botón de descarga de plantilla */}
             <button
               onClick={downloadTemplate}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"
             >
-              <FaDownload size={14} />
+              <FaDownload size={12} className="sm:w-3.5 sm:h-3.5" />
               Descargar Plantilla
             </button>
 
             {/* Botón de carga */}
-            <label className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors cursor-pointer">
-              <FaUpload size={14} />
+            <label className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer whitespace-nowrap">
+              <FaUpload size={12} className="sm:w-3.5 sm:h-3.5" />
               {uploading ? "Subiendo..." : "Subir Archivo"}
               <input
                 ref={fileInputRef}

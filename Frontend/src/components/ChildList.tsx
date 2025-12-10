@@ -176,25 +176,25 @@ const ChildList = forwardRef<ChildListRef, Props>(
         </div>
 
         {!loading && children.length > 0 && (
-          <div className="flex justify-between items-center pt-3 border-t mt-3">
-            <p className="text-sm text-gray-600">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-3 border-t mt-3">
+            <p className="text-xs sm:text-sm text-gray-600">
               Mostrando {children.length} participantes
             </p>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+                className="px-2 sm:px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"
               >
                 ← Anterior
               </button>
-              <span className="px-3 py-1.5 text-sm font-medium">
-                Página {page}
+              <span className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium whitespace-nowrap">
+                Pág. {page}
               </span>
               <button
                 onClick={() => setPage((p) => p + 1)}
                 disabled={children.length < limit}
-                className="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+                className="px-2 sm:px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"
               >
                 Siguiente →
               </button>
