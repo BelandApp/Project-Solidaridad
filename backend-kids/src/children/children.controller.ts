@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, ParseUUIDPipe, UseInterceptors, UploadedFile, BadRequestException, Query } from '@nestjs/common';
 import { ChildrenService } from './children.service';
 import { CreateChildDto } from './dto/create-child.dto';
 import { UpdateChildDto } from './dto/update-child.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @ApiTags('children')
 @Controller('children')
@@ -17,11 +19,35 @@ export class ChildrenController {
         return this.childrenService.create(createChildDto);
     }
 
+    @Post('upload-csv')
+    @UseInterceptors(FileInterceptor('file'))
+    @ApiConsumes('multipart/form-data')
+    @ApiOperation({ summary: 'Upload CSV file to bulk create children', description: 'Headers: fullName, age, sex' })
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                file: {
+                    type: 'string',
+                    format: 'binary',
+                },
+            },
+        },
+    })
+    @ApiResponse({ status: 201, description: 'Children created successfully.' })
+    async uploadCsv(@UploadedFile() file: Express.Multer.File) {
+        if (!file) {
+            throw new BadRequestException('File is required');
+        }
+        return this.childrenService.uploadCsv(file.buffer);
+    }
+
+
     @Get()
-    @ApiOperation({ summary: 'List all children' })
-    @ApiResponse({ status: 200, description: 'List of children.' })
-    findAll() {
-        return this.childrenService.findAll();
+    @ApiOperation({ summary: 'List all children with pagination' })
+    @ApiResponse({ status: 200, description: 'Paginated list of children.' })
+    findAll(@Query() paginationDto: PaginationDto) {
+        return this.childrenService.findAll(paginationDto.page, paginationDto.limit);
     }
 
     @Get(':id')

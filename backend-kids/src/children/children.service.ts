@@ -1,13 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Child } from './entities/child.entity';
 import { CreateChildDto } from './dto/create-child.dto';
 import { UpdateChildDto } from './dto/update-child.dto';
 import * as QRCode from 'qrcode';
+import * as csv from 'csv-parser';
+import { Readable } from 'stream';
 
 @Injectable()
 export class ChildrenService {
+    private readonly logger = new Logger(ChildrenService.name);
+
     constructor(
         @InjectRepository(Child)
         private readonly childrenRepository: Repository<Child>,
@@ -15,20 +19,8 @@ export class ChildrenService {
 
     async create(createChildDto: CreateChildDto): Promise<Child> {
         const child = this.childrenRepository.create(createChildDto);
-
-        // Save first to get the ID? Or generate QR based on DTO info?
-        // Request says "QR generada automáticamente al crear".
-        // Usually, QR contains the ID to identify the child.
-        // If I need the ID in the QR, I must save first, then update with QR, or use a UUID generated beforehand.
-        // Since we use @PrimaryGeneratedColumn('uuid'), TypeORM generates it on save.
-        // To have the ID in the QR, I'll save first, generate QR with ID, then save again.
-
-        // Save initial to generate ID
         const savedChild = await this.childrenRepository.save(child);
 
-        // Generate QR with the ID (and maybe name for readability if scanned casually)
-        // Format: JSON string or just ID? Request says: "POST /participations/register-by-qr se envía { eventId: string, childId: string }".
-        // If scanning sends childId, then the QR probably encodes the childId.
         const qrData = JSON.stringify({ id: savedChild.id, name: savedChild.fullName });
         const qrCode = await QRCode.toDataURL(qrData);
 
@@ -36,8 +28,12 @@ export class ChildrenService {
         return this.childrenRepository.save(savedChild);
     }
 
-    async findAll(): Promise<Child[]> {
-        return this.childrenRepository.find();
+    async findAll(page: number = 1, limit: number = 10): Promise<{ data: Child[], total: number, page: number, limit: number }> {
+        const [data, total] = await this.childrenRepository.findAndCount({
+            skip: (page - 1) * limit,
+            take: limit,
+        });
+        return { data, total, page, limit };
     }
 
     async findOne(id: string): Promise<Child> {
@@ -49,7 +45,7 @@ export class ChildrenService {
     }
 
     async update(id: string, updateChildDto: UpdateChildDto): Promise<Child> {
-        const child = await this.findOne(id); // Ensure exists
+        const child = await this.findOne(id);
         Object.assign(child, updateChildDto);
         return this.childrenRepository.save(child);
     }
@@ -59,5 +55,56 @@ export class ChildrenService {
         if (result.affected === 0) {
             throw new NotFoundException(`Child with ID ${id} not found`);
         }
+    }
+
+    async uploadCsv(buffer: Buffer): Promise<Child[]> {
+        // Strip BOM if present
+        const csvString = buffer.toString('utf-8').replace(/^\uFEFF/, '');
+        const stream = Readable.from(csvString);
+        const childrenToCreate: CreateChildDto[] = [];
+        this.logger.log('Starting processing CSV');
+        this.logger.log(`Buffer length: ${buffer.length}`);
+
+        return new Promise((resolve, reject) => {
+            stream
+                .pipe(csv({
+                    separator: ';',
+                    mapHeaders: ({ header }) => header.trim()
+                }))
+                .on('data', (row) => {
+                    this.logger.debug(`Row received: ${JSON.stringify(row)}`);
+                    // Map CSV columns to DTO
+                    // Expected headers: fullName, age, sex
+                    if (!row.fullName || !row.age || !row.sex) {
+                        this.logger.warn(`Invalid row: ${JSON.stringify(row)}`);
+                        // Can optionally log or skip invalid rows
+                        return;
+                    }
+
+                    childrenToCreate.push({
+                        fullName: row.fullName,
+                        age: parseInt(row.age, 10),
+                        sex: row.sex as 'Niño' | 'Niña',
+                    });
+                })
+                .on('end', async () => {
+                    this.logger.log(`CSV parsing completed. Found ${childrenToCreate.length} valid records.`);
+                    try {
+                        const savedChildren: Child[] = [];
+                        for (const dto of childrenToCreate) {
+                            const saved = await this.create(dto); // Reuses create logic which generates QR
+                            savedChildren.push(saved);
+                        }
+                        resolve(savedChildren);
+                    } catch (error) {
+                        this.logger.error('Error saving children', error);
+                        reject(error);
+                    }
+                })
+                .on('error', (error) => {
+                    this.logger.error('Error parsing CSV', error);
+                    reject(new BadRequestException('Error parsing CSV'));
+                });
+        });
     }
 }

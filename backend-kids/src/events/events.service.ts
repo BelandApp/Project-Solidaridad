@@ -17,8 +17,12 @@ export class EventsService {
         return this.eventsRepository.save(event);
     }
 
-    findAll() {
-        return this.eventsRepository.find();
+    async findAll(page: number = 1, limit: number = 10): Promise<{ data: Event[], total: number, page: number, limit: number }> {
+        const [data, total] = await this.eventsRepository.findAndCount({
+            skip: (page - 1) * limit,
+            take: limit,
+        });
+        return { data, total, page, limit };
     }
 
     async findOne(id: string) {

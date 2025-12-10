@@ -64,17 +64,23 @@ export class ParticipationsService {
         return this.create({ childId, eventId });
     }
 
-    async findByChild(childId: string) {
-        return this.participationsRepository.find({
+    async findByChild(childId: string, page: number = 1, limit: number = 10): Promise<{ data: EventParticipation[], total: number, page: number, limit: number }> {
+        const [data, total] = await this.participationsRepository.findAndCount({
             where: { childId },
             relations: ['event'],
+            skip: (page - 1) * limit,
+            take: limit,
         });
+        return { data, total, page, limit };
     }
 
-    async findByEvent(eventId: string) {
-        return this.participationsRepository.find({
+    async findByEvent(eventId: string, page: number = 1, limit: number = 10): Promise<{ data: EventParticipation[], total: number, page: number, limit: number }> {
+        const [data, total] = await this.participationsRepository.findAndCount({
             where: { eventId },
             relations: ['child'],
+            skip: (page - 1) * limit,
+            take: limit,
         });
+        return { data, total, page, limit };
     }
 }

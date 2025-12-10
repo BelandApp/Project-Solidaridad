@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Param, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import { ParticipationsService } from './participations.service';
 import { CreateParticipationDto } from './dto/create-participation.dto';
 import { RegisterByQrDto } from './dto/register-by-qr.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @ApiTags('participations')
 @Controller('participations')
@@ -27,16 +28,16 @@ export class ParticipationsController {
     }
 
     @Get('by-child/:childId')
-    @ApiOperation({ summary: 'Get participations by child' })
+    @ApiOperation({ summary: 'Get participations by child with pagination' })
     @ApiParam({ name: 'childId', format: 'uuid' })
-    findAllByChild(@Param('childId', ParseUUIDPipe) childId: string) {
-        return this.participationsService.findByChild(childId);
+    findAllByChild(@Param('childId', ParseUUIDPipe) childId: string, @Query() paginationDto: PaginationDto) {
+        return this.participationsService.findByChild(childId, paginationDto.page, paginationDto.limit);
     }
 
     @Get('by-event/:eventId')
-    @ApiOperation({ summary: 'Get participations by event' })
+    @ApiOperation({ summary: 'Get participations by event with pagination' })
     @ApiParam({ name: 'eventId', format: 'uuid' })
-    findAllByEvent(@Param('eventId', ParseUUIDPipe) eventId: string) {
-        return this.participationsService.findByEvent(eventId);
+    findAllByEvent(@Param('eventId', ParseUUIDPipe) eventId: string, @Query() paginationDto: PaginationDto) {
+        return this.participationsService.findByEvent(eventId, paginationDto.page, paginationDto.limit);
     }
 }

@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, ParseUUIDPipe, Query } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @ApiTags('events')
 @Controller('events')
@@ -18,10 +19,10 @@ export class EventsController {
     }
 
     @Get()
-    @ApiOperation({ summary: 'List all events' })
-    @ApiResponse({ status: 200, description: 'List of events.' })
-    findAll() {
-        return this.eventsService.findAll();
+    @ApiOperation({ summary: 'List all events with pagination' })
+    @ApiResponse({ status: 200, description: 'Paginated list of events.' })
+    findAll(@Query() paginationDto: PaginationDto) {
+        return this.eventsService.findAll(paginationDto.page, paginationDto.limit);
     }
 
     @Get(':id')
