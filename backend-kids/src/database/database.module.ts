@@ -11,7 +11,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
                 type: 'postgres',
                 url: configService.get<string>('DATABASE_URL'),
                 entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-                synchronize: true, // Auto-create tables (dev only)
+                synchronize: false, // Auto-create tables (dev only)
                 autoLoadEntities: true,
             }),
         }),
