@@ -17,9 +17,15 @@ export default function EventForm({ onEventCreated }: Props) {
     e.preventDefault();
     try {
       setLoading(true);
+
+      // Capitalizar primera letra del nombre y descripción
+      const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
+      const capitalizedDescription =
+        description.charAt(0).toUpperCase() + description.slice(1);
+
       const newEvent = await createEvent({
-        name,
-        description,
+        name: capitalizedName,
+        description: capitalizedDescription,
         imageUrl: imageUrl || undefined,
       });
       setFeedback("Evento creado correctamente");

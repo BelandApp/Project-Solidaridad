@@ -1,7 +1,7 @@
 import "./globals.css";
 import type { ReactNode } from "react";
 import { APP_TITLE } from "@/lib/config";
-import { FaHandsHelping } from "react-icons/fa";
+import Image from "next/image";
 
 export const metadata = {
   title: "Beland Solidaridad",
@@ -18,11 +18,17 @@ function AppHeader() {
             href="/"
             className="flex items-center gap-2 sm:gap-3 group transition-transform hover:scale-105 min-w-0 flex-shrink"
           >
-            <div className="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm text-white shadow-md group-hover:bg-white/30 transition-colors flex-shrink-0">
-              <FaHandsHelping size={16} className="sm:w-5 sm:h-5" />
+            <div className="inline-flex h-8 w-8 sm:h-14 sm:w-14 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm text-white shadow-md group-hover:bg-white/30 transition-colors flex-shrink-0">
+              <Image
+                src="/logo.png"
+                alt="Beland Solidaridad"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="font-bold text-sm sm:text-xl text-white tracking-tight truncate">
+              <span className="font-bold text-base sm:text-xl md:text-2xl text-white tracking-tight truncate">
                 Beland Solidaridad
               </span>
               <span className="text-[10px] sm:text-xs text-emerald-50 font-medium hidden sm:block">
@@ -78,8 +84,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <div className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="inline-flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-emerald-500 text-white flex-shrink-0">
-                  <FaHandsHelping size={14} className="sm:w-4 sm:h-4" />
+                <div className="relative h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0">
+                  <Image
+                    src="/logo-icon.png"
+                    alt="Beland Icon"
+                    fill
+                    className="object-contain"
+                  />
                 </div>
                 <div className="text-center sm:text-left">
                   <p className="font-bold text-base sm:text-lg">

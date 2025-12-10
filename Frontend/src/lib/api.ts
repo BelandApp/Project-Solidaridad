@@ -106,7 +106,6 @@ export async function uploadChildrenCSV(file: File): Promise<Child[]> {
   formData.append("file", file);
 
   const url = `${BASE_URL}/children/upload-csv`;
-  console.log("📤 Uploading CSV:", file.name);
 
   const res = await fetch(url, {
     method: "POST",
@@ -115,16 +114,14 @@ export async function uploadChildrenCSV(file: File): Promise<Child[]> {
   });
   clearTimeout(timeout);
 
-  console.log("📥 Upload Response:", res.status, res.statusText);
-
   if (!res.ok) {
     const msg = await res.text();
-    console.error("❌ Upload Error:", msg);
+
     throw new Error(msg || `Error ${res.status}`);
   }
 
   const data = await res.json();
-  console.log("✅ Upload Success:", data.length, "children created");
+
   return data;
 }
 
@@ -159,7 +156,7 @@ export async function getEvents(page: number = 1, limit: number = 50) {
   }>(`/events?page=${page}&limit=${limit}`, {
     method: "GET",
   });
-  console.log("📦 Events response:", response);
+
   return response.data.reverse();
 }
 
