@@ -44,7 +44,7 @@ export default function QRScanner({ eventId, onClose }: Props) {
 
         // Ahora listar las cámaras disponibles
         const devices = await BrowserMultiFormatReader.listVideoInputDevices();
-        console.log("Cámaras detectadas:", devices);
+
         setCameras(devices);
 
         // Seleccionar cámara trasera por defecto
@@ -52,7 +52,7 @@ export default function QRScanner({ eventId, onClose }: Props) {
           /back|rear|environment/i.test(d.label)
         );
         const defaultDeviceId = backCam?.deviceId || devices[0]?.deviceId || "";
-        console.log("Cámara seleccionada:", defaultDeviceId);
+
         setSelectedCamera(defaultDeviceId);
       } catch (e) {
         console.error("Error al cargar cámaras:", e);
@@ -128,7 +128,7 @@ export default function QRScanner({ eventId, onClose }: Props) {
               const response = await registerByQr({ qrContent, eventId });
 
               setSuccessCount((prev) => prev + 1);
-              setResultMsg("✓ Registrado correctamente");
+              setResultMsg("Registrado correctamente");
 
               // Reproducir sonido de éxito
               const audio = new Audio(
@@ -236,9 +236,6 @@ export default function QRScanner({ eventId, onClose }: Props) {
                     {camera.label ||
                       `Cámara ${camera.deviceId.substring(0, 8)}`}
                   </span>
-                  {selectedCamera === camera.deviceId && (
-                    <span className="ml-2">✓</span>
-                  )}
                 </button>
               ))}
             </div>
