@@ -31,7 +31,20 @@ export default function QRScanner({ eventId, onClose }: Props) {
 
     async function loadCameras() {
       try {
+        // Primero pedir permisos de cámara
+        await navigator.mediaDevices
+          .getUserMedia({
+            video: true,
+            audio: false,
+          })
+          .then((stream) => {
+            // Detener el stream inmediatamente, solo necesitábamos los permisos
+            stream.getTracks().forEach((track) => track.stop());
+          });
+
+        // Ahora listar las cámaras disponibles
         const devices = await BrowserMultiFormatReader.listVideoInputDevices();
+        console.log("Cámaras detectadas:", devices);
         setCameras(devices);
 
         // Seleccionar cámara trasera por defecto
@@ -39,10 +52,13 @@ export default function QRScanner({ eventId, onClose }: Props) {
           /back|rear|environment/i.test(d.label)
         );
         const defaultDeviceId = backCam?.deviceId || devices[0]?.deviceId || "";
+        console.log("Cámara seleccionada:", defaultDeviceId);
         setSelectedCamera(defaultDeviceId);
       } catch (e) {
         console.error("Error al cargar cámaras:", e);
-        setErrorMsg("No se pudo acceder a las cámaras");
+        setErrorMsg(
+          "No se pudo acceder a las cámaras. Por favor, otorgue permisos de cámara."
+        );
       }
     }
 
