@@ -3,13 +3,12 @@ import { useState } from "react";
 import { createChild } from "@/lib/api";
 
 export default function ChildForm() {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [document, setDocument] = useState("");
+  const [age, setAge] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [tutorName, setTutorName] = useState("");
-  const [contactPhone, setContactPhone] = useState("");
-  const [notes, setNotes] = useState("");
-  const [qr, setQr] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [feedback, setFeedback] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
@@ -17,23 +16,21 @@ export default function ChildForm() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await createChild({
-        firstName,
-        lastName,
+      await createChild({
+        fullName,
+        document,
+        age: parseInt(age) || 0,
         birthDate,
         tutorName,
-        contactPhone,
-        notes,
-        qr,
+        imageUrl: imageUrl || undefined,
       });
-      setFeedback(res.message ?? "Niño creado correctamente");
-      setFirstName("");
-      setLastName("");
+      setFeedback("Niño creado correctamente. QR generado automáticamente.");
+      setFullName("");
+      setDocument("");
+      setAge("");
       setBirthDate("");
       setTutorName("");
-      setContactPhone("");
-      setNotes("");
-      setQr("");
+      setImageUrl("");
     } catch (e: any) {
       setFeedback(e?.message ?? "Error al crear niño");
     } finally {
@@ -43,25 +40,37 @@ export default function ChildForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm mb-1">Nombre Completo</label>
+        <input
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          className="w-full border rounded px-3 py-2"
+          placeholder="Juan Pérez"
+          required
+        />
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm mb-1">Nombre</label>
+          <label className="block text-sm mb-1">DNI/Documento</label>
           <input
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
+            value={document}
+            onChange={(e) => setDocument(e.target.value)}
             className="w-full border rounded px-3 py-2"
-            placeholder="Introduce el nombre"
+            placeholder="12345678"
             required
           />
         </div>
         <div>
-          <label className="block text-sm mb-1">Apellido</label>
+          <label className="block text-sm mb-1">Edad</label>
           <input
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
+            type="number"
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
             className="w-full border rounded px-3 py-2"
-            placeholder="Introduce el apellido"
+            placeholder="8"
             required
+            min="0"
           />
         </div>
       </div>
@@ -73,44 +82,28 @@ export default function ChildForm() {
             value={birthDate}
             onChange={(e) => setBirthDate(e.target.value)}
             className="w-full border rounded px-3 py-2"
-          />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">QR (texto/código)</label>
-          <input
-            value={qr}
-            onChange={(e) => setQr(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-            placeholder="Código asignado"
             required
           />
         </div>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-sm mb-1">Nombre del tutor</label>
           <input
             value={tutorName}
             onChange={(e) => setTutorName(e.target.value)}
             className="w-full border rounded px-3 py-2"
-          />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Teléfono de contacto</label>
-          <input
-            value={contactPhone}
-            onChange={(e) => setContactPhone(e.target.value)}
-            className="w-full border rounded px-3 py-2"
+            placeholder="María Pérez"
+            required
           />
         </div>
       </div>
       <div>
-        <label className="block text-sm mb-1">Notas (opcional)</label>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+        <label className="block text-sm mb-1">URL de imagen (opcional)</label>
+        <input
+          type="url"
+          value={imageUrl}
+          onChange={(e) => setImageUrl(e.target.value)}
           className="w-full border rounded px-3 py-2"
-          placeholder="Alergias, consideraciones especiales, etc."
+          placeholder="https://ejemplo.com/foto.jpg"
         />
       </div>
       <button

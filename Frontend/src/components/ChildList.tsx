@@ -1,20 +1,10 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { deleteChild, getChildren } from "@/lib/api";
+import { deleteChild, getChildren, type Child } from "@/lib/api";
 import { FaQrcode, FaPen, FaTrash } from "react-icons/fa";
 
 export default function ChildList() {
-  const [children, setChildren] = useState<
-    Array<{
-      id: string;
-      firstName: string;
-      lastName: string;
-      birthDate?: string;
-      tutorName?: string;
-      contactPhone?: string;
-      qr: string;
-    }>
-  >([]);
+  const [children, setChildren] = useState<Child[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
@@ -31,7 +21,7 @@ export default function ChildList() {
     const q = query.trim().toLowerCase();
     if (!q) return children;
     return children.filter((c) =>
-      `${c.firstName} ${c.lastName}`.toLowerCase().includes(q)
+      `${c.fullName} ${c.document}`.toLowerCase().includes(q)
     );
   }, [children, query]);
 
@@ -61,6 +51,8 @@ export default function ChildList() {
           <thead>
             <tr className="text-left">
               <th className="p-3">Nombre Completo</th>
+              <th className="p-3">DNI</th>
+              <th className="p-3">Edad</th>
               <th className="p-3">Tutor</th>
               <th className="p-3">Acciones</th>
             </tr>
@@ -68,7 +60,7 @@ export default function ChildList() {
           <tbody>
             {loading && (
               <tr>
-                <td className="p-3" colSpan={3}>
+                <td className="p-3" colSpan={5}>
                   Cargando...
                 </td>
               </tr>
@@ -76,10 +68,10 @@ export default function ChildList() {
             {!loading &&
               filtered.map((c) => (
                 <tr key={c.id} className="border-t">
-                  <td className="p-3">
-                    {c.firstName} {c.lastName}
-                  </td>
-                  <td className="p-3">{c.tutorName || "-"}</td>
+                  <td className="p-3">{c.fullName}</td>
+                  <td className="p-3">{c.document}</td>
+                  <td className="p-3">{c.age}</td>
+                  <td className="p-3">{c.tutorName}</td>
                   <td className="p-3 flex items-center gap-2">
                     <button className="px-2 py-1 rounded bg-emerald-100 text-emerald-800 inline-flex items-center gap-1">
                       <FaQrcode /> QR
@@ -98,7 +90,7 @@ export default function ChildList() {
               ))}
             {!loading && !filtered.length && (
               <tr>
-                <td className="p-3" colSpan={3}>
+                <td className="p-3" colSpan={5}>
                   {error || "Sin resultados"}
                 </td>
               </tr>

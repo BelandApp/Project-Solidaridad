@@ -1,19 +1,10 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { deleteEvent, getEvents } from "@/lib/api";
+import { deleteEvent, getEvents, type Event } from "@/lib/api";
 import { FaQrcode, FaPen, FaTrash } from "react-icons/fa";
 
 export default function EventList() {
-  const [events, setEvents] = useState<
-    Array<{
-      id: string;
-      key: string;
-      name: string;
-      dateTime?: string;
-      location?: string;
-      description?: string;
-    }>
-  >([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
@@ -58,15 +49,14 @@ export default function EventList() {
           <thead>
             <tr className="text-left">
               <th className="p-3">Evento</th>
-              <th className="p-3">Fecha</th>
-              <th className="p-3">Ubicación</th>
+              <th className="p-3">Descripción</th>
               <th className="p-3">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td className="p-3" colSpan={4}>
+                <td className="p-3" colSpan={3}>
                   Cargando...
                 </td>
               </tr>
@@ -75,8 +65,7 @@ export default function EventList() {
               filtered.map((e) => (
                 <tr key={e.id} className="border-t">
                   <td className="p-3">{e.name}</td>
-                  <td className="p-3">{e.dateTime || "-"}</td>
-                  <td className="p-3">{e.location || "-"}</td>
+                  <td className="p-3 text-xs text-gray-600">{e.description}</td>
                   <td className="p-3 flex items-center gap-2">
                     <button className="px-2 py-1 rounded bg-emerald-100 text-emerald-800 inline-flex items-center gap-1">
                       <FaQrcode /> QR
@@ -95,7 +84,7 @@ export default function EventList() {
               ))}
             {!loading && !filtered.length && (
               <tr>
-                <td className="p-3" colSpan={4}>
+                <td className="p-3" colSpan={3}>
                   {error || "Sin resultados"}
                 </td>
               </tr>
