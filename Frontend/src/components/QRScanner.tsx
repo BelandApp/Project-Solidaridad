@@ -1,14 +1,14 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
-import { checkInAttendance } from "@/lib/api";
+import { registerByQr } from "@/lib/api";
 
 type Props = {
-  eventKey: string;
+  eventId: string;
   onClose: () => void;
 };
 
-export default function QRScanner({ eventKey, onClose }: Props) {
+export default function QRScanner({ eventId, onClose }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [resultMsg, setResultMsg] = useState<string>("");
   const [isScanning, setIsScanning] = useState<boolean>(true);
@@ -63,13 +63,13 @@ export default function QRScanner({ eventKey, onClose }: Props) {
             if (stopped) return;
             if (result) {
               setIsScanning(false);
-              const text = result.getText();
+              const qrContent = result.getText();
               try {
-                const res = await checkInAttendance({
-                  eventKey,
-                  childQr: text,
+                await registerByQr({
+                  qrContent,
+                  eventId,
                 });
-                setResultMsg(res.message ?? "Registrado correctamente");
+                setResultMsg("Participación registrada correctamente");
               } catch (e: any) {
                 setResultMsg(e?.message ?? "Error al registrar");
               }
@@ -87,7 +87,7 @@ export default function QRScanner({ eventKey, onClose }: Props) {
       const media = videoRef.current?.srcObject as MediaStream | null;
       media?.getTracks().forEach((t) => t.stop());
     };
-  }, [eventKey]);
+  }, [eventId]);
 
   function handleRescan() {
     setIsScanning(true);
@@ -108,13 +108,13 @@ export default function QRScanner({ eventKey, onClose }: Props) {
           reader.decodeFromVideoDevice(deviceId, video, async (result) => {
             if (result) {
               setIsScanning(false);
-              const text = result.getText();
+              const qrContent = result.getText();
               try {
-                const res = await checkInAttendance({
-                  eventKey,
-                  childQr: text,
+                await registerByQr({
+                  qrContent,
+                  eventId,
                 });
-                setResultMsg(res.message ?? "Registrado correctamente");
+                setResultMsg("Participación registrada correctamente");
               } catch (e: any) {
                 setResultMsg(e?.message ?? "Error al registrar");
               }

@@ -3,11 +3,9 @@ import { useState } from "react";
 import { createEvent } from "@/lib/api";
 
 export default function EventForm() {
-  const [key, setKey] = useState("");
   const [name, setName] = useState("");
-  const [dateTime, setDateTime] = useState("");
-  const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [feedback, setFeedback] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
@@ -15,13 +13,15 @@ export default function EventForm() {
     e.preventDefault();
     try {
       setLoading(true);
-      const res = await createEvent({ key, name });
-      setFeedback(res.message ?? "Evento creado correctamente");
-      setKey("");
+      await createEvent({
+        name,
+        description,
+        imageUrl: imageUrl || undefined,
+      });
+      setFeedback("Evento creado correctamente");
       setName("");
-      setDateTime("");
-      setLocation("");
       setDescription("");
+      setImageUrl("");
     } catch (e: any) {
       setFeedback(e?.message ?? "Error al crear evento");
     } finally {
@@ -32,16 +32,6 @@ export default function EventForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm mb-1">Clave del evento</label>
-        <input
-          value={key}
-          onChange={(e) => setKey(e.target.value)}
-          className="w-full border rounded px-3 py-2"
-          placeholder="merendero"
-          required
-        />
-      </div>
-      <div>
         <label className="block text-sm mb-1">Nombre del evento</label>
         <input
           value={name}
@@ -51,33 +41,25 @@ export default function EventForm() {
           required
         />
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm mb-1">Fecha y hora</label>
-          <input
-            type="datetime-local"
-            value={dateTime}
-            onChange={(e) => setDateTime(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Ubicación</label>
-          <input
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-            placeholder="Ej: Salón Principal"
-          />
-        </div>
-      </div>
       <div>
         <label className="block text-sm mb-1">Descripción</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           className="w-full border rounded px-3 py-2"
-          placeholder="Detalles del evento"
+          placeholder="Descripción del evento"
+          rows={3}
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm mb-1">URL de imagen (opcional)</label>
+        <input
+          type="url"
+          value={imageUrl}
+          onChange={(e) => setImageUrl(e.target.value)}
+          className="w-full border rounded px-3 py-2"
+          placeholder="https://ejemplo.com/evento.jpg"
         />
       </div>
       <button

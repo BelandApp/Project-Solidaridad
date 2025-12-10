@@ -1,5 +1,7 @@
 import { API_BASE_URL, API_TIMEOUT_MS } from "./config";
+
 const BASE_URL = API_BASE_URL;
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
@@ -11,49 +13,69 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     },
     signal: controller.signal,
   });
+  clearTimeout(timeout);
   if (!res.ok) {
     const msg = await res.text();
     throw new Error(msg || `Error ${res.status}`);
   }
-  clearTimeout(timeout);
   return res.json();
 }
 
-export async function createChild(data: {
-  firstName: string;
-  lastName: string;
-  birthDate?: string;
-  tutorName?: string;
-  contactPhone?: string;
-  notes?: string;
-  qr: string;
-}) {
-  return request<{ message?: string }>(`/children`, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+// ==================== CHILDREN ====================
+
+export interface Child {
+  id: string;
+  fullName: string;
+  document: string;
+  age: number;
+  birthDate: string;
+  tutorName: string;
+  imageUrl?: string;
+  qrCode?: string; // Base64 QR generado automáticamente
+  createdAt: string;
+  updatedAt: string;
 }
 
-export async function createEvent(data: { key: string; name: string }) {
-  return request<{ message?: string }>(`/events`, {
+export async function createChild(data: {
+  fullName: string;
+  document: string;
+  age: number;
+  birthDate: string;
+  tutorName: string;
+  imageUrl?: string;
+}) {
+  return request<Child>(`/children`, {
     method: "POST",
     body: JSON.stringify(data),
   });
 }
 
 export async function getChildren() {
-  return request<
-    Array<{
-      id: string;
-      firstName: string;
-      lastName: string;
-      birthDate?: string;
-      tutorName?: string;
-      contactPhone?: string;
-      qr: string;
-    }>
-  >(`/children`, {
+  return request<Child[]>(`/children`, {
     method: "GET",
+  });
+}
+
+export async function getChild(id: string) {
+  return request<Child>(`/children/${id}`, {
+    method: "GET",
+  });
+}
+
+export async function updateChild(
+  id: string,
+  data: {
+    fullName?: string;
+    document?: string;
+    age?: number;
+    birthDate?: string;
+    tutorName?: string;
+    imageUrl?: string;
+  }
+) {
+  return request<Child>(`/children/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
   });
 }
 
@@ -63,18 +85,51 @@ export async function deleteChild(id: string) {
   });
 }
 
+// ==================== EVENTS ====================
+
+export interface Event {
+  id: string;
+  name: string;
+  description: string;
+  imageUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function createEvent(data: {
+  name: string;
+  description: string;
+  imageUrl?: string;
+}) {
+  return request<Event>(`/events`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 export async function getEvents() {
-  return request<
-    Array<{
-      id: string;
-      key: string;
-      name: string;
-      dateTime?: string;
-      location?: string;
-      description?: string;
-    }>
-  >(`/events`, {
+  return request<Event[]>(`/events`, {
     method: "GET",
+  });
+}
+
+export async function getEvent(id: string) {
+  return request<Event>(`/events/${id}`, {
+    method: "GET",
+  });
+}
+
+export async function updateEvent(
+  id: string,
+  data: {
+    name?: string;
+    description?: string;
+    imageUrl?: string;
+  }
+) {
+  return request<Event>(`/events/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
   });
 }
 
@@ -84,12 +139,45 @@ export async function deleteEvent(id: string) {
   });
 }
 
-export async function checkInAttendance(data: {
-  eventKey: string;
-  childQr: string;
+// ==================== PARTICIPATIONS ====================
+
+export interface Participation {
+  id: string;
+  childId: string;
+  eventId: string;
+  registeredAt: string;
+  child?: Child;
+  event?: Event;
+}
+
+export async function createParticipation(data: {
+  childId: string;
+  eventId: string;
 }) {
-  return request<{ message?: string }>(`/attendance/check-in`, {
+  return request<Participation>(`/participations`, {
     method: "POST",
     body: JSON.stringify(data),
+  });
+}
+
+export async function registerByQr(data: {
+  qrContent: string;
+  eventId: string;
+}) {
+  return request<Participation>(`/participations/register-by-qr`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getParticipationsByChild(childId: string) {
+  return request<Participation[]>(`/participations/by-child/${childId}`, {
+    method: "GET",
+  });
+}
+
+export async function getParticipationsByEvent(eventId: string) {
+  return request<Participation[]>(`/participations/by-event/${eventId}`, {
+    method: "GET",
   });
 }
