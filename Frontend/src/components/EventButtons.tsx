@@ -40,69 +40,80 @@ export default function EventButtons({ onSelectEvent }: Props) {
   }
   return (
     <div className="space-y-6 relative">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {events.map((event, index) => {
           const Icon =
             index === 0 ? FaUtensils : index === 1 ? FaGift : FaBullhorn;
           return (
             <button
               key={event.id}
-              className="rounded-xl border bg-white px-6 py-8 text-gray-900 hover:shadow-md transition-shadow"
+              className="group relative rounded-2xl border-2 border-gray-200 bg-white overflow-hidden hover:border-emerald-400 hover:shadow-xl transition-all hover:scale-105"
               onClick={() =>
                 onSelectEvent
                   ? onSelectEvent(event.id)
                   : setActiveEventId(event.id)
               }
             >
-              <div className="flex flex-col items-center gap-3">
-                <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                  <Icon />
-                </span>
-                <span className="font-medium">{event.name}</span>
-                <span className="text-xs text-gray-500 text-center line-clamp-2">
-                  {event.description}
-                </span>
+              {/* Imagen o gradiente de fondo */}
+              <div className="relative h-48 bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-500">
+                {event.imageUrl ? (
+                  <img
+                    src={event.imageUrl}
+                    alt={event.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="p-4 bg-white/20 backdrop-blur-sm rounded-2xl">
+                      <Icon className="text-white" size={48} />
+                    </div>
+                  </div>
+                )}
+                {/* Overlay con gradiente */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+
+                {/* Badge de QR */}
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg">
+                  <FaQrcode className="text-emerald-600" size={20} />
+                </div>
+              </div>
+
+              {/* Contenido */}
+              <div className="p-6 text-left">
+                <h3 className="font-bold text-xl text-gray-800 mb-2 group-hover:text-emerald-600 transition-colors">
+                  {event.name}
+                </h3>
+                <p className="text-sm text-gray-600 line-clamp-2 mb-4">
+                  {event.description || "Sin descripción"}
+                </p>
+
+                {/* Botón de acción */}
+                <div className="flex items-center justify-between text-emerald-600 font-semibold text-sm">
+                  <span>Iniciar escaneo</span>
+                  <svg
+                    className="w-5 h-5 group-hover:translate-x-1 transition-transform"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
               </div>
             </button>
           );
         })}
       </div>
       {!onSelectEvent && activeEventId && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-40 flex justify-end">
-          {/* sutil blur del contenedor detrás para enfoque */}
-          <div className="absolute inset-0 -z-10 backdrop-blur-sm" />
-          <div className="pointer-events-auto w-full sm:w-[440px] md:w-[500px]">
-            <div className="translate-x-0 animate-[slideIn_180ms_ease-out] rounded-l-2xl border border-gray-200 bg-white shadow-xl ring-1 ring-black/5">
-              <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
-                <div className="flex items-center gap-2 text-emerald-700">
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100">
-                    <FaQrcode />
-                  </span>
-                  <h2 className="font-semibold text-sm">
-                    Escaneando:{" "}
-                    {events.find((e) => e.id === activeEventId)?.name}
-                  </h2>
-                </div>
-                <button
-                  aria-label="Cerrar"
-                  className="inline-flex items-center gap-1 rounded px-2 py-1 text-sm text-gray-700 hover:bg-gray-100"
-                  onClick={() => setActiveEventId(null)}
-                >
-                  <FaTimes />
-                </button>
-              </div>
-              <div className="p-4">
-                <QRScanner
-                  eventId={activeEventId}
-                  onClose={() => setActiveEventId(null)}
-                />
-                <div className="mt-3 text-xs text-gray-600">
-                  Consejo: usá la cámara trasera y buena iluminación.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <QRScanner
+          eventId={activeEventId}
+          onClose={() => setActiveEventId(null)}
+        />
       )}
     </div>
   );

@@ -1,9 +1,13 @@
+"use client";
+import { useRef } from "react";
 import EventForm from "src/components/EventForm";
-import EventList from "src/components/EventList";
+import EventList, { type EventListRef } from "src/components/EventList";
 import { FaChild } from "react-icons/fa";
 import Link from "next/link";
 
 export default function AdminEventsPage() {
+  const eventListRef = useRef<EventListRef>(null);
+
   return (
     <section className="space-y-6">
       <div className="flex items-center justify-between">
@@ -18,10 +22,12 @@ export default function AdminEventsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white border rounded-lg p-4">
           <h2 className="font-medium mb-3">Añadir Nuevo Evento</h2>
-          <EventForm />
+          <EventForm
+            onEventCreated={(event) => eventListRef.current?.addEvent(event)}
+          />
         </div>
         <div className="bg-white border rounded-lg p-4">
-          <EventList />
+          <EventList ref={eventListRef} />
         </div>
       </div>
     </section>

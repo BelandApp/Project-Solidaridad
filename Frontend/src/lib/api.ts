@@ -5,7 +5,11 @@ const BASE_URL = API_BASE_URL;
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
-  const res = await fetch(`${BASE_URL}${path}`, {
+
+  const url = `${BASE_URL}${path}`;
+  console.log("🌐 API Request:", url, options?.method || "GET");
+
+  const res = await fetch(url, {
     ...(options || {}),
     headers: {
       "Content-Type": "application/json",
@@ -14,11 +18,25 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     signal: controller.signal,
   });
   clearTimeout(timeout);
+
+  console.log("📥 API Response:", res.status, res.statusText);
+
   if (!res.ok) {
     const msg = await res.text();
+    console.error("❌ API Error:", msg);
     throw new Error(msg || `Error ${res.status}`);
   }
-  return res.json();
+
+  // Si la respuesta está vacía (típico en DELETE), retornar objeto vacío
+  const text = await res.text();
+  if (!text || text.trim() === "") {
+    console.log("✅ API Data: (empty response)");
+    return {} as T;
+  }
+
+  const data = JSON.parse(text);
+  console.log("✅ API Data:", data);
+  return data;
 }
 
 // ==================== CHILDREN ====================
@@ -26,23 +44,15 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 export interface Child {
   id: string;
   fullName: string;
-  document: string;
   age: number;
-  birthDate: string;
-  tutorName: string;
-  imageUrl?: string;
+  sex: "Niño" | "Niña";
   qrCode?: string; // Base64 QR generado automáticamente
-  createdAt: string;
-  updatedAt: string;
 }
 
 export async function createChild(data: {
   fullName: string;
-  document: string;
   age: number;
-  birthDate: string;
-  tutorName: string;
-  imageUrl?: string;
+  sex: "Niño" | "Niña";
 }) {
   return request<Child>(`/children`, {
     method: "POST",
@@ -50,10 +60,16 @@ export async function createChild(data: {
   });
 }
 
-export async function getChildren() {
-  return request<Child[]>(`/children`, {
+export async function getChildren(page: number = 1, limit: number = 50) {
+  const response = await request<{
+    data: Child[];
+    total: number;
+    page: number;
+    limit: number;
+  }>(`/children?page=${page}&limit=${limit}`, {
     method: "GET",
   });
+  return response.data.reverse();
 }
 
 export async function getChild(id: string) {
@@ -66,11 +82,8 @@ export async function updateChild(
   id: string,
   data: {
     fullName?: string;
-    document?: string;
     age?: number;
-    birthDate?: string;
-    tutorName?: string;
-    imageUrl?: string;
+    sex?: "Niño" | "Niña";
   }
 ) {
   return request<Child>(`/children/${id}`, {
@@ -83,6 +96,36 @@ export async function deleteChild(id: string) {
   return request<{ message?: string }>(`/children/${id}`, {
     method: "DELETE",
   });
+}
+
+export async function uploadChildrenCSV(file: File): Promise<Child[]> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const url = `${BASE_URL}/children/upload-csv`;
+  console.log("📤 Uploading CSV:", file.name);
+
+  const res = await fetch(url, {
+    method: "POST",
+    body: formData,
+    signal: controller.signal,
+  });
+  clearTimeout(timeout);
+
+  console.log("📥 Upload Response:", res.status, res.statusText);
+
+  if (!res.ok) {
+    const msg = await res.text();
+    console.error("❌ Upload Error:", msg);
+    throw new Error(msg || `Error ${res.status}`);
+  }
+
+  const data = await res.json();
+  console.log("✅ Upload Success:", data.length, "children created");
+  return data;
 }
 
 // ==================== EVENTS ====================
@@ -107,10 +150,17 @@ export async function createEvent(data: {
   });
 }
 
-export async function getEvents() {
-  return request<Event[]>(`/events`, {
+export async function getEvents(page: number = 1, limit: number = 50) {
+  const response = await request<{
+    data: Event[];
+    total: number;
+    page: number;
+    limit: number;
+  }>(`/events?page=${page}&limit=${limit}`, {
     method: "GET",
   });
+  console.log("📦 Events response:", response);
+  return response.data.reverse();
 }
 
 export async function getEvent(id: string) {
@@ -145,7 +195,7 @@ export interface Participation {
   id: string;
   childId: string;
   eventId: string;
-  registeredAt: string;
+  timestamp: string;
   child?: Child;
   event?: Event;
 }
