@@ -10,19 +10,10 @@ export class Child {
     fullName: string;
 
     @Column()
-    document: string; // DNI or passport
+    sex: 'Niño' | 'Niña';
 
     @Column()
     age: number;
-
-    @Column()
-    birthDate: Date;
-
-    @Column()
-    tutorName: string;
-
-    @Column({ nullable: true })
-    imageUrl: string;
 
     @Column({ type: 'text', nullable: true })
     qrCode: string; // Base64 string
