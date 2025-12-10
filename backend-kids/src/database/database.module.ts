@@ -12,6 +12,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
                 url: configService.get<string>('DATABASE_URL'),
                 entities: [__dirname + '/../**/*.entity{.ts,.js}'],
                 synchronize: false, // Auto-create tables (dev only)
+                dropSchema: false,
                 autoLoadEntities: true,
             }),
         }),
