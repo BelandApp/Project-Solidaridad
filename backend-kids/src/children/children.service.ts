@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like, Between, MoreThanOrEqual, LessThanOrEqual, ILike } from 'typeorm';
 import { Child } from './entities/child.entity';
 import { CreateChildDto } from './dto/create-child.dto';
 import { UpdateChildDto } from './dto/update-child.dto';
 import * as QRCode from 'qrcode';
 import * as csv from 'csv-parser';
 import { Readable } from 'stream';
+import * as archiver from 'archiver';
+import { createCanvas, loadImage } from 'canvas';
 
 @Injectable()
 export class ChildrenService {
@@ -21,20 +23,41 @@ export class ChildrenService {
         const child = this.childrenRepository.create(createChildDto);
         const savedChild = await this.childrenRepository.save(child);
 
-        const qrData = JSON.stringify({ id: savedChild.id, name: savedChild.fullName });
-        const qrCode = await QRCode.toDataURL(qrData);
+        const qrCode = await QRCode.toDataURL(savedChild.id);
 
         savedChild.qrCode = qrCode;
         return this.childrenRepository.save(savedChild);
     }
 
-    async findAll(page: number = 1, limit: number = 10): Promise<{ data: Child[], total: number, page: number, limit: number }> {
+    async findAll(searchDto: any): Promise<{ data: Child[], total: number, page: number, limit: number }> {
+        const { page = 1, limit = 10, name, sex, minAge, maxAge } = searchDto;
+        const where: any = {};
+
+        if (name) {
+            where.fullName = ILike(`%${name}%`);
+        }
+
+        if (sex) {
+            where.sex = sex;
+        }
+
+        if (minAge !== undefined && maxAge !== undefined) {
+            where.age = Between(minAge, maxAge);
+        } else if (minAge !== undefined) {
+            where.age = MoreThanOrEqual(minAge);
+        } else if (maxAge !== undefined) {
+            where.age = LessThanOrEqual(maxAge);
+        }
+
         const [data, total] = await this.childrenRepository.findAndCount({
+            where,
+            order: { createdAt: 'DESC' },
             skip: (page - 1) * limit,
             take: limit,
         });
         return { data, total, page, limit };
     }
+
 
     async findOne(id: string): Promise<Child> {
         const child = await this.childrenRepository.findOneBy({ id });
@@ -106,5 +129,54 @@ export class ChildrenService {
                     reject(new BadRequestException('Error parsing CSV'));
                 });
         });
+    }
+
+    async downloadAllQrs(): Promise<any> {
+        const children = await this.childrenRepository.find();
+        const archive = archiver('zip', {
+            zlib: { level: 9 },
+        });
+
+        // Background processing
+        (async () => {
+            try {
+                for (const child of children) {
+                    if (child.qrCode) {
+                        try {
+                            const buffer = await this.generateQrImageWithText(child.qrCode, child.fullName);
+                            archive.append(buffer, { name: `${child.fullName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png` });
+                        } catch (err) {
+                            this.logger.error(`Failed to generate QR for child ${child.id}`, err);
+                        }
+                    }
+                }
+                await archive.finalize();
+            } catch (error) {
+                this.logger.error('Error generating QRs zip', error);
+                archive.emit('error', error);
+            }
+        })();
+
+        return archive;
+    }
+
+    private async generateQrImageWithText(qrDataUrl: string, label: string): Promise<Buffer> {
+        const image = await loadImage(qrDataUrl);
+
+        const canvasWidth = image.width;
+        const canvasHeight = image.height + 50;
+        const canvas = createCanvas(canvasWidth, canvasHeight);
+        const ctx = canvas.getContext('2d');
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        ctx.drawImage(image, 0, 0);
+
+        ctx.font = 'bold 16px sans-serif';
+        ctx.fillStyle = '#000000';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, canvasWidth / 2, image.height + 30);
+
+        return canvas.toBuffer('image/png');
     }
 }

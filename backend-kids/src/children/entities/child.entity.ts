@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { EventParticipation } from '../../participations/entities/participation.entity';
 
 @Entity('children')
@@ -20,4 +20,10 @@ export class Child {
 
     @OneToMany(() => EventParticipation, (participation) => participation.child)
     participations: EventParticipation[];
+
+    @CreateDateColumn()
+    createdAt: Date;
+
+    @UpdateDateColumn()
+    updatedAt: Date;
 }

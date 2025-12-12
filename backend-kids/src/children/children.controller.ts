@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, ParseUUIDPipe, UseInterceptors, UploadedFile, BadRequestException, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, ParseUUIDPipe, UseInterceptors, UploadedFile, BadRequestException, Query, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { ChildrenService } from './children.service';
 import { CreateChildDto } from './dto/create-child.dto';
 import { UpdateChildDto } from './dto/update-child.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { SearchChildrenDto } from './dto/search-child.dto';
 
 @ApiTags('children')
 @Controller('children')
@@ -42,12 +44,22 @@ export class ChildrenController {
         return this.childrenService.uploadCsv(file.buffer);
     }
 
+    @Get('export-qrs')
+    @ApiOperation({ summary: 'Download all QR codes as ZIP' })
+    @ApiResponse({ status: 200, description: 'ZIP file downloaded.' })
+    async downloadQrs(@Res() res: Response) {
+        const archive = await this.childrenService.downloadAllQrs();
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader('Content-Disposition', 'attachment; filename="qr-codes.zip"');
+        archive.pipe(res);
+    }
+
 
     @Get()
     @ApiOperation({ summary: 'List all children with pagination' })
     @ApiResponse({ status: 200, description: 'Paginated list of children.' })
-    findAll(@Query() paginationDto: PaginationDto) {
-        return this.childrenService.findAll(paginationDto.page, paginationDto.limit);
+    findAll(@Query() searchDto: SearchChildrenDto) {
+        return this.childrenService.findAll(searchDto);
     }
 
     @Get(':id')

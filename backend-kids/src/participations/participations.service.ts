@@ -45,9 +45,7 @@ export class ParticipationsService {
 
         let childId: string;
         try {
-            // Assuming QR content is "{"id":"..."}"
-            const data = JSON.parse(qrContent);
-            childId = data.id;
+            childId = qrContent;
         } catch (e) {
             // Fallback: assume QR is just the ID string if JSON parse fails?
             // Or maybe it is base64? 
