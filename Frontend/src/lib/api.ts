@@ -72,6 +72,73 @@ export async function getChildren(page: number = 1, limit: number = 50) {
   return response.data.reverse();
 }
 
+// Buscar participantes con filtros (name, sex, minAge, maxAge)
+export async function searchChildren(options?: {
+  page?: number;
+  limit?: number;
+  name?: string;
+  sex?: string;
+  minAge?: number;
+  maxAge?: number;
+}) {
+  const page = options?.page ?? 1;
+  const limit = options?.limit ?? 50;
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("limit", String(limit));
+  if (options?.name) params.set("name", options.name);
+  if (options?.sex) params.set("sex", options.sex);
+  if (typeof options?.minAge === "number")
+    params.set("minAge", String(options!.minAge));
+  if (typeof options?.maxAge === "number")
+    params.set("maxAge", String(options!.maxAge));
+
+  const response = await request<{
+    data: Child[];
+    total: number;
+    page: number;
+    limit: number;
+  }>(`/children?${params.toString()}`, { method: "GET" });
+
+  return response.data.reverse();
+}
+
+// Descarga un ZIP con todos los QR. Opcionalmente se pueden pasar filtros (name, sex, minAge, maxAge)
+export async function downloadAllQrs(filters?: {
+  name?: string;
+  sex?: string;
+  minAge?: number;
+  maxAge?: number;
+}) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+  const params = new URLSearchParams();
+  if (filters) {
+    if (filters.name) params.set("name", filters.name);
+    if (filters.sex) params.set("sex", filters.sex);
+    if (typeof filters.minAge === "number")
+      params.set("minAge", String(filters.minAge));
+    if (typeof filters.maxAge === "number")
+      params.set("maxAge", String(filters.maxAge));
+  }
+
+  const url = `${BASE_URL}/children/export-qrs${params.toString() ? `?${params.toString()}` : ""}`;
+  const res = await fetch(url, {
+    method: "GET",
+    signal: controller.signal,
+  });
+  clearTimeout(timeout);
+
+  if (!res.ok) {
+    const msg = await res.text();
+    throw new Error(msg || `Error ${res.status}`);
+  }
+
+  const blob = await res.blob();
+  return blob;
+}
+
 export async function getChild(id: string) {
   return request<Child>(`/children/${id}`, {
     method: "GET",

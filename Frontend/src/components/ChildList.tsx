@@ -6,8 +6,14 @@ import {
   useImperativeHandle,
   forwardRef,
 } from "react";
-import { deleteChild, getChildren, type Child } from "@/lib/api";
-import { FaQrcode, FaPen, FaTrash } from "react-icons/fa";
+import {
+  deleteChild,
+  getChildren,
+  downloadAllQrs,
+  searchChildren,
+  type Child,
+} from "@/lib/api";
+import { FaQrcode, FaPen, FaTrash, FaDownload } from "react-icons/fa";
 
 type Props = {
   onChildAdded?: (child: Child) => void;
@@ -25,6 +31,11 @@ const ChildList = forwardRef<ChildListRef, Props>(
     const [error, setError] = useState<string>("");
     const [page, setPage] = useState(1);
     const limit = 12;
+    const [isDownloading, setIsDownloading] = useState(false);
+    // Filtros avanzados
+    const [sexFilter, setSexFilter] = useState<"" | "Niño" | "Niña">("");
+    const [minAgeFilter, setMinAgeFilter] = useState<string>("");
+    const [maxAgeFilter, setMaxAgeFilter] = useState<string>("");
     const [deleteModal, setDeleteModal] = useState<{
       show: boolean;
       id: string;
@@ -49,12 +60,29 @@ const ChildList = forwardRef<ChildListRef, Props>(
     }));
 
     useEffect(() => {
-      setLoading(true);
-      getChildren(page, limit)
-        .then((data) => setChildren(data))
-        .catch(() => setError("No se pudieron cargar los participantes"))
-        .finally(() => setLoading(false));
-    }, [page]);
+      async function fetchChildren() {
+        setLoading(true);
+        setError("");
+        try {
+          const data = await searchChildren({
+            page,
+            limit,
+            name: query || undefined,
+            sex: sexFilter || undefined,
+            minAge: minAgeFilter ? Number(minAgeFilter) : undefined,
+            maxAge: maxAgeFilter ? Number(maxAgeFilter) : undefined,
+          });
+          setChildren(data);
+        } catch (e) {
+          console.error("Error cargando participantes con filtros:", e);
+          setError("No se pudieron cargar los participantes");
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      fetchChildren();
+    }, [page, query, sexFilter, minAgeFilter, maxAgeFilter]);
 
     const filtered = useMemo(() => {
       if (!Array.isArray(children)) return [];
@@ -86,7 +114,14 @@ const ChildList = forwardRef<ChildListRef, Props>(
         // Recargar datos desde el servidor
         setTimeout(async () => {
           try {
-            const data = await getChildren(page, limit);
+            const data = await searchChildren({
+              page,
+              limit,
+              name: query || undefined,
+              sex: sexFilter || undefined,
+              minAge: minAgeFilter ? Number(minAgeFilter) : undefined,
+              maxAge: maxAgeFilter ? Number(maxAgeFilter) : undefined,
+            });
             setChildren(data);
           } catch (e) {
             console.error("Error recargando datos:", e);
@@ -107,14 +142,81 @@ const ChildList = forwardRef<ChildListRef, Props>(
 
     return (
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <h3 className="text-lg font-semibold">Lista de Participantes</h3>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar por nombre..."
-            className="border border-gray-300 rounded-lg px-4 py-2 text-sm w-full sm:w-64 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+        <div className="flex flex-col items-center sm:items-start gap-3">
+          <div className="w-full">
+            <h3 className="text-lg font-semibold">Lista de Participantes</h3>
+            <div className="mt-3">
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Buscar por nombre..."
+                className="w-full sm:w-96 bg-white border border-emerald-100 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          </div>
+
+          {/* Estilos mejorados para filtros: tarjeta compacta con limpieza */}
+          <div className="mt-3 w-full">
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex flex-col gap-3 shadow-sm w-full max-w-md sm:max-w-full mx-auto sm:mx-0 overflow-hidden">
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className=" flex-none">
+                  <select
+                    value={sexFilter}
+                    onChange={(e) => setSexFilter(e.target.value as any)}
+                    className="h-10 bg-white border border-emerald-200 rounded-md px-3 text-sm"
+                  >
+                    <option value="">Todos</option>
+                    <option value="Niño">Niño</option>
+                    <option value="Niña">Niña</option>
+                  </select>
+                </div>
+
+                <div className="flex-none flex items-center gap-4">
+                  <div className="flex flex-col">
+                    <label className="text-xs ml-2 text-emerald-700 mb-1">
+                      Edad mínima
+                    </label>
+                    <input
+                      type="number"
+                      value={minAgeFilter}
+                      onChange={(e) => setMinAgeFilter(e.target.value)}
+                      placeholder="Edad mínima"
+                      className="h-10 w-28 bg-white border border-emerald-100 rounded-md px-2 text-sm"
+                      min={0}
+                    />
+                  </div>
+                  <div className="text-emerald-300">—</div>
+                  <div className="flex flex-col">
+                    <label className="text-xs ml-2 text-emerald-700 mb-1">
+                      Edad máxima
+                    </label>
+                    <input
+                      type="number"
+                      value={maxAgeFilter}
+                      onChange={(e) => setMaxAgeFilter(e.target.value)}
+                      placeholder="Edad máxima"
+                      className="h-10 w-28 bg-white border border-emerald-100 rounded-md px-2 text-sm"
+                      min={0}
+                    />
+                  </div>
+                </div>
+
+                <div className="ml-auto">
+                  <button
+                    onClick={() => {
+                      setSexFilter("");
+                      setMinAgeFilter("");
+                      setMaxAgeFilter("");
+                      setPage(1);
+                    }}
+                    className="text-sm text-emerald-700 bg-emerald-100 border-2 border-emerald-700 hover:text-emerald-900 px-2 py-1 rounded-md"
+                  >
+                    Limpiar filtros
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {error && (
@@ -224,6 +326,11 @@ const ChildList = forwardRef<ChildListRef, Props>(
                   />
                   <p className="mt-4 text-sm text-gray-600 text-center">
                     Muestra este código QR para registrar asistencia
+                  </p>
+                  <p className="mt-2 text-xs text-gray-500 text-center">
+                    Nota: si observa caracteres raros o cuadrados bajo la
+                    imagen, el QR igual funciona. Es un tema de la fuente
+                    incrustada en la imagen generada en el servidor.
                   </p>
                 </div>
               ) : (
