@@ -1,40 +1,70 @@
 import "./globals.css";
 import type { ReactNode } from "react";
 import { APP_TITLE } from "@/lib/config";
-import { FaHandsHelping } from "react-icons/fa";
+import Image from "next/image";
 
 export const metadata = {
-  title: "Solidaridad Eventos",
-  description: "Control de asistencia y entregas",
+  title: "Beland Solidaridad",
+  description: "Sistema de gestión de eventos y asistencia",
 };
 
 function AppHeader() {
   return (
-    <header className="sticky top-0 z-20 border-b bg-white/80 backdrop-blur">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded bg-emerald-500 text-white">
-            <FaHandsHelping />
-          </span>
-          <span className="font-semibold text-gray-900">{APP_TITLE}</span>
+    <header className="sticky top-0 z-20 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 shadow-lg">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
+        <div className="flex items-center justify-between gap-2">
+          {/* Logo y título clickeable */}
+          <a
+            href="/"
+            className="flex items-center gap-2 sm:gap-3 group transition-transform hover:scale-105 min-w-0 flex-shrink"
+          >
+            <div className="inline-flex h-8 w-8 sm:h-14 sm:w-14 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm text-white shadow-md group-hover:bg-white/30 transition-colors flex-shrink-0">
+              <Image
+                src="/logo.png"
+                alt="Beland Solidaridad"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="font-bold text-base sm:text-xl md:text-2xl text-white tracking-tight truncate">
+                Beland Solidaridad
+              </span>
+              <span className="text-[10px] sm:text-xs text-emerald-50 font-medium hidden sm:block">
+                Sistema de Gestión
+              </span>
+            </div>
+          </a>
+
+          {/* Navegación */}
+          <nav className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            <a
+              href="/"
+              className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-white text-xs sm:text-sm font-medium hover:bg-white/20 transition-colors backdrop-blur-sm whitespace-nowrap"
+            >
+              Eventos
+            </a>
+            <a
+              href="/admin/children"
+              className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-white text-xs sm:text-sm font-medium hover:bg-white/20 transition-colors backdrop-blur-sm whitespace-nowrap"
+            >
+              Niños
+            </a>
+            <a
+              href="/admin/events"
+              className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-white text-xs sm:text-sm font-medium hover:bg-white/20 transition-colors backdrop-blur-sm whitespace-nowrap"
+            >
+              Talleres
+            </a>
+            <a
+              href="/admin/attendance"
+              className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-white text-xs sm:text-sm font-medium hover:bg-white/20 transition-colors backdrop-blur-sm whitespace-nowrap"
+            >
+              Asistencia
+            </a>
+          </nav>
         </div>
-        <nav className="flex items-center gap-1 text-sm">
-          <a href="/" className="px-3 py-2 rounded hover:bg-gray-100">
-            Eventos
-          </a>
-          <a
-            href="/admin/children"
-            className="px-3 py-2 rounded hover:bg-gray-100"
-          >
-            Niños
-          </a>
-          <a
-            href="/admin/events"
-            className="px-3 py-2 rounded hover:bg-gray-100"
-          >
-            Talleres
-          </a>
-        </nav>
       </div>
     </header>
   );
@@ -43,11 +73,45 @@ function AppHeader() {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es">
-      <body className="min-h-screen bg-gray-50 text-gray-900">
+      <body className="min-h-screen bg-gradient-to-br from-gray-50 via-emerald-50/30 to-teal-50/20 text-gray-900 flex flex-col">
         <AppHeader />
-        <main className="max-w-6xl mx-auto p-4">{children}</main>
-        <footer className="mt-8 text-center text-xs text-gray-500">
-          © {new Date().getFullYear()} {APP_TITLE}
+        <main className="flex-1 max-w-7xl mx-auto w-full px-3 sm:px-6 py-4 sm:py-6">
+          {children}
+        </main>
+
+        {/* Footer rediseñado */}
+        <footer className="mt-auto bg-gradient-to-r from-gray-800 via-gray-900 to-gray-800 text-white">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="relative h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0">
+                  <Image
+                    src="/logo-icon.png"
+                    alt="Beland Icon"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+                <div className="text-center sm:text-left">
+                  <p className="font-bold text-base sm:text-lg">
+                    Beland Solidaridad
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-gray-400">
+                    Transformando vidas juntos
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-center sm:text-right">
+                <p className="text-xs sm:text-sm text-gray-300">
+                  © {new Date().getFullYear()} Beland Solidaridad
+                </p>
+                <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
+                  Todos los derechos reservados
+                </p>
+              </div>
+            </div>
+          </div>
         </footer>
       </body>
     </html>
